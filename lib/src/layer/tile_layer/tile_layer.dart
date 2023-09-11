@@ -230,6 +230,7 @@ class TileLayer extends StatefulWidget {
   /// Note: Changing the [tileUpdateTransformer] after TileLayer is created has
   /// no affect.
   final TileUpdateTransformer tileUpdateTransformer;
+  final TileImageManager? _customTileImageManager;
 
   TileLayer({
     super.key,
@@ -261,6 +262,7 @@ class TileLayer extends StatefulWidget {
     this.tileBounds,
     TileUpdateTransformer? tileUpdateTransformer,
     String userAgentPackageName = 'unknown',
+    TileImageManager? customTileImageManager,
   })  : assert(
           tileDisplay.when(
               instantaneous: (_) => true,
@@ -294,7 +296,8 @@ class TileLayer extends StatefulWidget {
                   'User-Agent': 'flutter_map ($userAgentPackageName)',
               }),
         tileUpdateTransformer =
-            tileUpdateTransformer ?? TileUpdateTransformers.ignoreTapEvents;
+            tileUpdateTransformer ?? TileUpdateTransformers.ignoreTapEvents,
+        _customTileImageManager = customTileImageManager;
 
   @override
   State<StatefulWidget> createState() => _TileLayerState();
@@ -303,7 +306,7 @@ class TileLayer extends StatefulWidget {
 class _TileLayerState extends State<TileLayer> with TickerProviderStateMixin {
   bool _initializedFromMapState = false;
 
-  final TileImageManager _tileImageManager = TileImageManager();
+  late final TileImageManager _tileImageManager;
   late TileBounds _tileBounds;
   late TileRangeCalculator _tileRangeCalculator;
   late TileScaleCalculator _tileScaleCalculator;
@@ -326,6 +329,8 @@ class _TileLayerState extends State<TileLayer> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+
+    _tileImageManager = widget._customTileImageManager ?? TileImageManager();
 
     if (widget.reset != null) {
       _resetSub = widget.reset?.listen(
