@@ -88,7 +88,7 @@ class Marker {
   final LatLng point;
 
   /// Function that builds UI of the marker
-  final WidgetBuilder builder;
+  final Widget Function(BuildContext context) builder;
 
   /// Bounding box width of the marker
   final double width;
@@ -125,6 +125,9 @@ class Marker {
   /// [Directionality.of] returns [TextDirection.rtl].
   final AlignmentGeometry? rotateAlignment;
 
+  /// TODO: documentation
+  final bool useSizeInMeters;
+
   Marker({
     this.key,
     required this.point,
@@ -135,6 +138,7 @@ class Marker {
     this.rotate,
     this.rotateOrigin,
     this.rotateAlignment,
+    this.useSizeInMeters = false,
   });
 }
 
@@ -216,20 +220,37 @@ class MarkerLayer extends StatelessWidget {
       }
 
       final pos = pxPoint - map.pixelOrigin;
-      final markerWidget = (marker.rotate ?? rotate)
-          ? Transform.rotate(
-              angle: -map.rotationRad,
-              origin: marker.rotateOrigin ?? rotateOrigin ?? Offset.zero,
-              alignment: marker.rotateAlignment ?? rotateAlignment,
-              child: marker.builder(context),
-            )
-          : marker.builder(context);
+
+      Widget markerWidget = marker.builder(context);
+      if (marker.rotate ?? rotate) {
+        markerWidget = Transform.rotate(
+          angle: -map.rotationRad,
+          origin: marker.rotateOrigin ?? rotateOrigin ?? Offset.zero,
+          alignment: marker.rotateAlignment ?? rotateAlignment,
+          child: markerWidget,
+        );
+      }
+
+      double height = marker.height;
+      double width = marker.width;
+
+      if (marker.useSizeInMeters) {
+        final basePoint = marker.point;
+        final baseOffset = map.getOffsetFromOrigin(basePoint);
+        final rHeight = const Distance().offset(basePoint, height, 0);
+        final rWidth = const Distance().offset(basePoint, width, 90);
+
+        height = (baseOffset - map.getOffsetFromOrigin(rHeight)).distance;
+        width = (baseOffset - map.getOffsetFromOrigin(rWidth)).distance;
+
+        print('height $height width $width');
+      }
 
       markerWidgets.add(
         Positioned(
           key: marker.key,
-          width: marker.width,
-          height: marker.height,
+          width: width,
+          height: height,
           left: pos.x - rightPortion,
           top: pos.y - bottomPortion,
           child: markerWidget,
