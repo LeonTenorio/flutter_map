@@ -242,8 +242,6 @@ class MarkerLayer extends StatelessWidget {
 
         height = (baseOffset - map.getOffsetFromOrigin(rHeight)).distance;
         width = (baseOffset - map.getOffsetFromOrigin(rWidth)).distance;
-
-        print('height $height width $width');
       }
 
       markerWidgets.add(
