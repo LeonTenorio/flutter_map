@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_example/widgets/drawer.dart';
@@ -167,6 +169,39 @@ class MarkerPageState extends State<MarkerPage> {
                     rotate: counterRotate,
                     anchorPos: AnchorPos.align(anchorAlign),
                   ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: const LatLng(
+                          51.51868093513547,
+                          -0.12835376940892318,
+                        ),
+                        height: 20,
+                        width: 20,
+                        builder: (context) => LayoutBuilder(
+                          builder: (context, constraints) {
+                            final minDimension = min(
+                              constraints.maxHeight,
+                              constraints.maxWidth,
+                            );
+
+                            return Transform.scale(
+                              scale: minDimension / 30,
+                              child: const SizedBox(
+                                width: 30,
+                                height: 30,
+                                child: Icon(
+                                  Icons.map,
+                                  color: Colors.amber,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        useSizeInMeters: true,
+                      ),
+                    ],
+                  )
                 ],
               ),
             ),
