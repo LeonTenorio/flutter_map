@@ -125,7 +125,10 @@ class Marker {
   /// [Directionality.of] returns [TextDirection.rtl].
   final AlignmentGeometry? rotateAlignment;
 
-  /// TODO: documentation
+  /// Parameter to enable or not the feature to use markers dimensions in meters.
+  ///
+  /// A good way to use that feature is using a LayoutBuilder and building according the
+  /// maxHeight and minWidth values.
   final bool useSizeInMeters;
 
   Marker({
