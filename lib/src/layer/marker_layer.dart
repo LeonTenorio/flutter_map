@@ -208,11 +208,11 @@ class MarkerLayer extends StatelessWidget {
       if (marker.useSizeInMeters) {
         final basePoint = marker.point;
         final baseOffset = map.getOffsetFromOrigin(basePoint);
-        final rHeight = const Distance().offset(basePoint, height, 0);
-        final rWidth = const Distance().offset(basePoint, width, 90);
+        final rHeight = const Distance().offset(basePoint, height / 2, 0);
+        final rWidth = const Distance().offset(basePoint, width / 2, 90);
 
-        height = (baseOffset - map.getOffsetFromOrigin(rHeight)).distance;
-        width = (baseOffset - map.getOffsetFromOrigin(rWidth)).distance;
+        height = (baseOffset - map.getOffsetFromOrigin(rHeight)).distance * 2;
+        width = (baseOffset - map.getOffsetFromOrigin(rWidth)).distance * 2;
       }
 
       // See if any portion of the Marker rect resides in the map bounds
