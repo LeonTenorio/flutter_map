@@ -131,6 +131,10 @@ class Marker {
   /// maxHeight and minWidth values.
   final bool useSizeInMeters;
 
+  /// TODO: Documentation
+  final double? maxWidthUsingMetersPixels;
+  final double? maxHeightUsingMetersPixels;
+
   Marker({
     this.key,
     required this.point,
@@ -142,6 +146,8 @@ class Marker {
     this.rotateOrigin,
     this.rotateAlignment,
     this.useSizeInMeters = false,
+    this.maxWidthUsingMetersPixels,
+    this.maxHeightUsingMetersPixels,
   });
 }
 
@@ -213,6 +219,17 @@ class MarkerLayer extends StatelessWidget {
 
         height = (baseOffset - map.getOffsetFromOrigin(rHeight)).distance * 2;
         width = (baseOffset - map.getOffsetFromOrigin(rWidth)).distance * 2;
+
+        final maxHeightUsingMetersPixels = marker.maxHeightUsingMetersPixels;
+        final maxWidthUsingMetersPixels = marker.maxWidthUsingMetersPixels;
+        if (maxHeightUsingMetersPixels != null &&
+            height > maxHeightUsingMetersPixels) {
+          height = maxHeightUsingMetersPixels;
+        }
+        if (maxWidthUsingMetersPixels != null &&
+            width > maxWidthUsingMetersPixels) {
+          width = maxWidthUsingMetersPixels;
+        }
       }
 
       // See if any portion of the Marker rect resides in the map bounds
