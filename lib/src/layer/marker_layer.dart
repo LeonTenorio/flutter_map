@@ -202,6 +202,19 @@ class MarkerLayer extends StatelessWidget {
     for (final marker in markers) {
       final pxPoint = map.project(marker.point);
 
+      double height = marker.height;
+      double width = marker.width;
+
+      if (marker.useSizeInMeters) {
+        final basePoint = marker.point;
+        final baseOffset = map.getOffsetFromOrigin(basePoint);
+        final rHeight = const Distance().offset(basePoint, height, 0);
+        final rWidth = const Distance().offset(basePoint, width, 90);
+
+        height = (baseOffset - map.getOffsetFromOrigin(rHeight)).distance;
+        width = (baseOffset - map.getOffsetFromOrigin(rWidth)).distance;
+      }
+
       // See if any portion of the Marker rect resides in the map bounds
       // If not, don't spend any resources on build function.
       // This calculation works for any Anchor position whithin the Marker
@@ -209,12 +222,12 @@ class MarkerLayer extends StatelessWidget {
       // unlike the map coordinates.
       final anchor = Anchor.fromPos(
         marker.anchorPos ?? anchorPos ?? AnchorPos.align(AnchorAlign.center),
-        marker.width,
-        marker.height,
+        width,
+        height,
       );
-      final rightPortion = marker.width - anchor.left;
+      final rightPortion = width - anchor.left;
       final leftPortion = anchor.left;
-      final bottomPortion = marker.height - anchor.top;
+      final bottomPortion = height - anchor.top;
       final topPortion = anchor.top;
       if (!map.pixelBounds.containsPartialBounds(Bounds(
           CustomPoint(pxPoint.x + leftPortion, pxPoint.y - bottomPortion),
@@ -232,19 +245,6 @@ class MarkerLayer extends StatelessWidget {
           alignment: marker.rotateAlignment ?? rotateAlignment,
           child: markerWidget,
         );
-      }
-
-      double height = marker.height;
-      double width = marker.width;
-
-      if (marker.useSizeInMeters) {
-        final basePoint = marker.point;
-        final baseOffset = map.getOffsetFromOrigin(basePoint);
-        final rHeight = const Distance().offset(basePoint, height, 0);
-        final rWidth = const Distance().offset(basePoint, width, 90);
-
-        height = (baseOffset - map.getOffsetFromOrigin(rHeight)).distance;
-        width = (baseOffset - map.getOffsetFromOrigin(rWidth)).distance;
       }
 
       markerWidgets.add(
