@@ -134,6 +134,8 @@ class Marker {
   /// TODO: Documentation
   final double? maxWidthUsingMetersPixels;
   final double? maxHeightUsingMetersPixels;
+  final double? minWidthUsingMetersPixels;
+  final double? minHeightUsingMetersPixels;
 
   Marker({
     this.key,
@@ -148,6 +150,8 @@ class Marker {
     this.useSizeInMeters = false,
     this.maxWidthUsingMetersPixels,
     this.maxHeightUsingMetersPixels,
+    this.minHeightUsingMetersPixels,
+    this.minWidthUsingMetersPixels,
   });
 }
 
@@ -229,6 +233,17 @@ class MarkerLayer extends StatelessWidget {
         if (maxWidthUsingMetersPixels != null &&
             width > maxWidthUsingMetersPixels) {
           width = maxWidthUsingMetersPixels;
+        }
+
+        final minHeightUsingMetersPixels = marker.minHeightUsingMetersPixels;
+        final minWidthUsingMetersPixels = marker.minWidthUsingMetersPixels;
+        if (minHeightUsingMetersPixels != null &&
+            height < minHeightUsingMetersPixels) {
+          height = minHeightUsingMetersPixels;
+        }
+        if (minWidthUsingMetersPixels != null &&
+            width < minWidthUsingMetersPixels) {
+          width = minWidthUsingMetersPixels;
         }
       }
 
