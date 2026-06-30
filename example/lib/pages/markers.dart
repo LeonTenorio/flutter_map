@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_example/misc/tile_providers.dart';
@@ -172,8 +170,7 @@ class _MarkerPageState extends State<MarkerPage> {
                       ),
                       height: 1000,
                       width: 1000,
-                      useDimensionsInMeters: true,
-                      meterToPixelSizeConstraints: const BoxConstraints(
+                      useDimensionsInMeters: const BoxConstraints(
                         minHeight: 30,
                         minWidth: 30,
                       ),

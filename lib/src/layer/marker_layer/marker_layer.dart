@@ -109,7 +109,8 @@ class _MarkerLayerState extends State<MarkerLayer> {
   }
 
   (double, double) _getDimensionsInPixels(Marker marker) {
-    if (!marker.useDimensionsInMeters) return (marker.width, marker.height);
+    final constraints = marker.useDimensionsInMeters;
+    if (constraints == null) return (marker.width, marker.height);
 
     final camera = MapCamera.of(context);
 
@@ -141,10 +142,14 @@ class _MarkerLayerState extends State<MarkerLayer> {
       width = _pixelsPerMeter! * marker.width;
       height = _pixelsPerMeter! * marker.height;
     }
-    if (marker.meterToPixelSizeConstraints case final c?) {
-      return (c.constrainWidth(width), c.constrainHeight(height));
+
+    if (!constraints.minWidth.isFinite || !constraints.minHeight.isFinite) {
+      throw RangeError('`Marker.useSizeInMeters` must have finite minimums');
     }
-    return (width, height);
+    return (
+      constraints.constrainWidth(width),
+      constraints.constrainHeight(height)
+    );
   }
 
   @override

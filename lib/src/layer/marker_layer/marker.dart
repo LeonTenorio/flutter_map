@@ -22,24 +22,32 @@ class Marker {
   /// The [Marker] itself is not a widget.
   final Widget child;
 
-  /// Width of child, in pixels (or meters if [useDimensionsInMeters] is set).
+  /// Width of child, in pixels (unless [useDimensionsInMeters] is set).
   final double width;
 
-  /// Width of child, in pixels (or meters if [useDimensionsInMeters] is set).
+  /// Width of child, in pixels (unless [useDimensionsInMeters] is set).
   final double height;
 
-  /// Whether to treat [width] and [height] as a number of meters.
+  /// Whether to treat [width] and [height] as meters, with optional pixel size
+  /// constraints.
   ///
-  /// If this is `true`, the child can use [SizedBox.expand] to expand itself to
-  /// the available size. It can also use a [LayoutBuilder] to obtain its
-  /// calculated true size, if necessary.
+  /// If `null` (as default), [width] and [height] are specified in pixels.
   ///
-  /// See also [meterToPixelSizeConstraints].
-  final bool useDimensionsInMeters;
-
-  /// Optional constraints on the child's size in pixels, when
-  /// [useDimensionsInMeters] is enabled.
-  final BoxConstraints? meterToPixelSizeConstraints;
+  /// If set to [BoxConstraints], [width] and [height] are specified in meters.
+  /// They will constrain size of the marker on the screen in pixels. The
+  /// constraints must have finite minimum dimensions.
+  ///
+  /// Set an empty [BoxConstraints] to display the marker as its true
+  /// geographical size (without constraints):
+  ///
+  /// ```dart
+  ///   useDimensionsInMeters: const BoxConstraints(),
+  /// ```
+  ///
+  /// When using geographical sizing, the child can use [SizedBox.expand] to
+  /// expand itself to the available size. [LayoutBuilder] can be used to obtain
+  /// its calculated screen size, if necessary.
+  final BoxConstraints? useDimensionsInMeters;
 
   /// Alignment of the marker relative to the normal center at [point].
   ///
@@ -72,13 +80,13 @@ class Marker {
     required this.child,
     this.width = 30,
     this.height = 30,
-    this.useDimensionsInMeters = false,
-    this.meterToPixelSizeConstraints,
+    this.useDimensionsInMeters,
     this.alignment,
     this.rotate,
   });
 
-  /// Returns the alignment of a [width]x[height] rectangle by [left]x[top] pixels.
+  /// Returns the alignment of a [width]x[height] rectangle by [left]x[top]
+  /// pixels.
   static Alignment computePixelAlignment({
     required final double width,
     required final double height,
