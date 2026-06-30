@@ -133,9 +133,9 @@ class _MarkerPageState extends State<MarkerPage> {
                 openStreetMapTileLayer,
                 MarkerLayer(
                   rotate: counterRotate,
-                  markers: const [
-                    Marker(
-                      point: LatLng(47.18664724067855, -1.5436768515939427),
+                  markers: [
+                    const Marker(
+                      point: LatLng(47.18664, -1.54367),
                       width: 64,
                       height: 64,
                       alignment: Alignment.centerLeft,
@@ -147,8 +147,8 @@ class _MarkerPageState extends State<MarkerPage> {
                         ),
                       ),
                     ),
-                    Marker(
-                      point: LatLng(47.18664724067855, -1.5436768515939427),
+                    const Marker(
+                      point: LatLng(47.18664, -1.54367),
                       width: 64,
                       height: 64,
                       alignment: Alignment.centerRight,
@@ -160,10 +160,30 @@ class _MarkerPageState extends State<MarkerPage> {
                         ),
                       ),
                     ),
-                    Marker(
-                      point: LatLng(47.18664724067855, -1.5436768515939427),
+                    const Marker(
+                      point: LatLng(47.18664, -1.54367),
                       rotate: false,
                       child: ColoredBox(color: Colors.black),
+                    ),
+                    Marker(
+                      point: const LatLng(
+                        51.51868,
+                        -0.12835,
+                      ),
+                      height: 1000,
+                      width: 1000,
+                      useDimensionsInMeters: true,
+                      meterToPixelSizeConstraints: const BoxConstraints(
+                        minHeight: 30,
+                        minWidth: 30,
+                      ),
+                      child: SizedBox.expand(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) => DecoratedBox(
+                            decoration: BoxDecoration(border: BoxBorder.all()),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -171,43 +191,6 @@ class _MarkerPageState extends State<MarkerPage> {
                   markers: customMarkers,
                   rotate: counterRotate,
                   alignment: selectedAlignment,
-                ),
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: const LatLng(
-                        51.51868093513547,
-                        -0.12835376940892318,
-                      ),
-                      height: 20,
-                      width: 20,
-                      boxConstraintsUsingMetersInPixels: const BoxConstraints(
-                        maxHeight: 200,
-                        maxWidth: 200,
-                      ),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final minDimension = min(
-                            constraints.maxHeight,
-                            constraints.maxWidth,
-                          );
-
-                          return Transform.scale(
-                            scale: minDimension / 30,
-                            child: const SizedBox(
-                              width: 30,
-                              height: 30,
-                              child: Icon(
-                                Icons.map,
-                                color: Colors.amber,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      useSizeInMeters: true,
-                    ),
-                  ],
                 ),
               ],
             ),

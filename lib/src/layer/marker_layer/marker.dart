@@ -11,24 +11,37 @@ class Marker {
   /// This key will get passed through to the created marker widget.
   final Key? key;
 
-  /// Coordinates of the marker
+  /// Coordinates of the marker.
   ///
   /// This will be the center of the marker, assuming that [alignment] is
   /// [Alignment.center] (default).
   final LatLng point;
 
-  /// Widget tree of the marker, sized by [width] & [height]
+  /// Widget tree of the marker, sized by [width] & [height].
   ///
   /// The [Marker] itself is not a widget.
   final Widget child;
 
-  /// Width of [child]
+  /// Width of child, in pixels (or meters if [useDimensionsInMeters] is set).
   final double width;
 
-  /// Height of [child]
+  /// Width of child, in pixels (or meters if [useDimensionsInMeters] is set).
   final double height;
 
-  /// Alignment of the marker relative to the normal center at [point]
+  /// Whether to treat [width] and [height] as a number of meters.
+  ///
+  /// If this is `true`, the child can use [SizedBox.expand] to expand itself to
+  /// the available size. It can also use a [LayoutBuilder] to obtain its
+  /// calculated true size, if necessary.
+  ///
+  /// See also [meterToPixelSizeConstraints].
+  final bool useDimensionsInMeters;
+
+  /// Optional constraints on the child's size in pixels, when
+  /// [useDimensionsInMeters] is enabled.
+  final BoxConstraints? meterToPixelSizeConstraints;
+
+  /// Alignment of the marker relative to the normal center at [point].
   ///
   /// For example, [Alignment.topCenter] will mean the entire marker widget is
   /// located above the [point].
@@ -39,7 +52,7 @@ class Marker {
   final Alignment? alignment;
 
   /// Whether to counter rotate this marker to the map's rotation, to keep a
-  /// fixed orientation
+  /// fixed orientation.
   ///
   /// When `true`, this marker will always appear upright and vertical from the
   /// user's perspective. Defaults to `false` if also unset by [MarkerLayer].
@@ -47,17 +60,6 @@ class Marker {
   /// Note that this is not used to apply a custom rotation in degrees to the
   /// marker. Use a widget inside [child] to perform this.
   final bool? rotate;
-
-  /// Parameter to enable or not the feature to use markers dimensions in meters.
-  ///
-  /// A good way to use that feature is using a LayoutBuilder and building according the
-  /// maxHeight and minWidth values.
-  final bool useSizeInMeters;
-
-  /// Parameter to control the box size when the parameter [useSizeInMeters] is enabled.
-  /// That BoxConstraints is optional and when exists control the minimal and maximal size
-  /// in pixels of that region created by the map visible region in meters.
-  final BoxConstraints? boxConstraintsUsingMetersInPixels;
 
   /// Creates a container for a [child] widget located at a geographic coordinate
   /// [point]
@@ -70,10 +72,10 @@ class Marker {
     required this.child,
     this.width = 30,
     this.height = 30,
+    this.useDimensionsInMeters = false,
+    this.meterToPixelSizeConstraints,
     this.alignment,
     this.rotate,
-    this.useSizeInMeters = false,
-    this.boxConstraintsUsingMetersInPixels,
   });
 
   /// Returns the alignment of a [width]x[height] rectangle by [left]x[top] pixels.
