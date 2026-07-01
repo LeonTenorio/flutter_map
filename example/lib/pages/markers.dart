@@ -177,7 +177,7 @@ class _MarkerPageState extends State<MarkerPage> {
                       child: SizedBox.expand(
                         child: LayoutBuilder(
                           builder: (context, constraints) => DecoratedBox(
-                            decoration: BoxDecoration(border: BoxBorder.all()),
+                            decoration: BoxDecoration(border: Border.all()),
                           ),
                         ),
                       ),
