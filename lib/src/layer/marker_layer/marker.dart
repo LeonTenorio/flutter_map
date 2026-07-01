@@ -25,7 +25,7 @@ class Marker {
   /// Width of child, in pixels (unless [useDimensionsInMeters] is set).
   final double width;
 
-  /// Width of child, in pixels (unless [useDimensionsInMeters] is set).
+  /// Height of child, in pixels (unless [useDimensionsInMeters] is set).
   final double height;
 
   /// Whether to treat [width] and [height] as meters, with optional pixel size
