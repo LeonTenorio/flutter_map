@@ -106,7 +106,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk: ["3.39.0", ""]
+        sdk: ["3.41.0", ""] # Can't use 3.27 on github because windows-latest is incompatible now
     defaults:
       run:
         working-directory: ./example
