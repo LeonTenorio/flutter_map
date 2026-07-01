@@ -117,11 +117,8 @@ class _MarkerPageState extends State<MarkerPage> {
           Flexible(
             child: FlutterMap(
               options: MapOptions(
-                initialCenter: const LatLng(
-                  51.51868093513547,
-                  -0.12835376940892318,
-                ),
-                initialZoom: 15,
+                initialCenter: const LatLng(51.5, -0.09),
+                initialZoom: 5,
                 onTap: (_, p) => setState(() => customMarkers.add(buildPin(p))),
                 interactionOptions: const InteractionOptions(
                   flags: ~InteractiveFlag.doubleTapZoom,
