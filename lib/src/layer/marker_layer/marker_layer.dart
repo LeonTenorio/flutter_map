@@ -38,10 +38,10 @@ class MarkerLayer extends StatefulWidget {
   /// > location of the markers, this may or may not be significant.
   ///
   /// Where all markers within this layer are geographically (particularly
-  /// longitudinally) close, the difference in the ratio between pixels and
+  /// latitudinally) close, the difference in the ratio between pixels and
   /// meters between markers is likely to be small. Calculating this conversion
   /// ratio is expensive, and is usually done for every marker to ensure
-  /// accuracy, as the ratio depends on the longitude. Setting this `true` means
+  /// accuracy, as the ratio depends on the latitude. Setting this `true` means
   /// the ratio is calculated based off the first marker only, then reused for
   /// all other markers within this layer.
   ///
