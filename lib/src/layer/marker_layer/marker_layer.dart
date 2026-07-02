@@ -136,8 +136,7 @@ class _MarkerLayerState extends State<MarkerLayer> {
   }
 
   Size _getSizeInPixels(Marker m, int i, Offset pxPoint, double zoomScale) {
-    final constraints = m.useDimensionsInMeters;
-    if (constraints == null) return Size(m.width, m.height);
+    final constraints = m.useDimensionsInMeters!;
     if (!constraints.minWidth.isFinite || !constraints.minHeight.isFinite) {
       throw RangeError(
         '`Marker.useDimensionsInMeters` must have finite minimums',
@@ -154,10 +153,7 @@ class _MarkerLayerState extends State<MarkerLayer> {
       final width = 2 * (pxPoint - Offset(wpx, wpy)).distance;
       if (m.width == m.height) return Size(width, width);
       final (hpx, hpy) = camera.crs.transform(p.$2.dx, p.$2.dy, zoomScale);
-      return Size(
-        width,
-        2 * (pxPoint - Offset(hpx, hpy)).distance,
-      );
+      return Size(width, 2 * (pxPoint - Offset(hpx, hpy)).distance);
     }
 
     if (!widget.optimizeDimensionsInMeters) {
@@ -201,12 +197,20 @@ class _MarkerLayerState extends State<MarkerLayer> {
             final pxPoint = Offset(px, py);
 
             // Resolve real size and alignment
-            final size = _getSizeInPixels(m, i, pxPoint, zoomScale);
+            final double width;
+            final double height;
+            if (m.useDimensionsInMeters == null) {
+              width = m.width;
+              height = m.height;
+            } else {
+              Size(:width, :height) =
+                  _getSizeInPixels(m, i, pxPoint, zoomScale);
+            }
             final alignment = m.alignment ?? widget.alignment;
-            final left = 0.5 * size.width * (alignment.x + 1);
-            final top = 0.5 * size.height * (alignment.y + 1);
-            final right = size.width - left;
-            final bottom = size.height - top;
+            final left = 0.5 * width * (alignment.x + 1);
+            final top = 0.5 * height * (alignment.y + 1);
+            final right = width - left;
+            final bottom = height - top;
 
             Positioned? getPositioned(double worldShift) {
               final shiftedX = pxPoint.dx + worldShift;
@@ -228,8 +232,8 @@ class _MarkerLayerState extends State<MarkerLayer> {
 
               return Positioned(
                 key: m.key,
-                width: size.width,
-                height: size.height,
+                width: width,
+                height: height,
                 left: shiftedLocalPoint.dx - right,
                 top: shiftedLocalPoint.dy - bottom,
                 child: (m.rotate ?? widget.rotate)
