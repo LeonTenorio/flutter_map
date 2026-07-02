@@ -28,12 +28,12 @@ class CircleLayer<R extends Object> extends StatelessWidget {
   /// > location of the circles, this may or may not be significant.
   ///
   /// Where all circles within this layer are geographically (particularly
-  /// latitudinally) close, the difference in the ratio between pixels and
+  /// longitudinally) close, the difference in the ratio between pixels and
   /// meters between circles is likely to be small. Calculating this
   /// conversion ratio is expensive, and is usually done for every circle to
-  /// ensure accuracy, as the ratio depends on the latitude. Setting this `true`
-  /// means the ratio is calculated based off the first circle only, then reused
-  /// for all other circles within this layer.
+  /// ensure accuracy, as the ratio depends on the longitude. Setting this
+  /// `true` means the ratio is calculated based off the first circle only, then
+  /// reused for all other circles within this layer.
   ///
   /// This should not be used where circles are geographically spread out - it
   /// is best suited, for example, for circles located within a single city.
