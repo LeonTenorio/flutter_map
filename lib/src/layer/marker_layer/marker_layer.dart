@@ -76,6 +76,7 @@ class _MarkerLayerState extends State<MarkerLayer> {
   /// projected -> screen transformation per marker, instead of a full
   /// re-projection.
   List<Offset>? _projectedPoints;
+  Map<int, (Offset, Offset)>? _projectedMeterSizes;
   Crs? _projectionCrs;
 
   // Cached number of pixels per meter.
@@ -89,6 +90,7 @@ class _MarkerLayerState extends State<MarkerLayer> {
     // new widget instance re-projects, so in-place mutations of the markers
     // list keep working as they did when projection was performed per-frame.
     _projectedPoints = null;
+    _projectedMeterSizes = null;
   }
 
   List<Offset> _projectPoints(Crs crs) {
@@ -108,9 +110,34 @@ class _MarkerLayerState extends State<MarkerLayer> {
     );
   }
 
-  Size _getSizeInPixels(Marker marker, Offset markerPoint) {
-    final constraints = marker.useDimensionsInMeters;
-    if (constraints == null) return Size(marker.width, marker.height);
+  Map<int, (Offset, Offset)> _projectMeterSizes(Crs crs) {
+    final projection = crs.projection;
+    return Map.fromEntries(
+      () sync* {
+        for (int i = 0; i < widget.markers.length; i++) {
+          final m = widget.markers[i];
+          if (m.useDimensionsInMeters == null) continue;
+
+          final w =
+              projection.project(_distance.offset(m.point, m.width / 2, 180));
+          if (m.width == m.height) yield MapEntry(i, (w, w));
+          yield MapEntry(
+            i,
+            (
+              w,
+              projection.project(_distance.offset(m.point, m.height / 2, 180)),
+            ),
+          );
+
+          if (widget.optimizeDimensionsInMeters) break;
+        }
+      }(),
+    );
+  }
+
+  Size _getSizeInPixels(Marker m, int i, Offset pxPoint, double zoomScale) {
+    final constraints = m.useDimensionsInMeters;
+    if (constraints == null) return Size(m.width, m.height);
     if (!constraints.minWidth.isFinite || !constraints.minHeight.isFinite) {
       throw RangeError(
         '`Marker.useDimensionsInMeters` must have finite minimums',
@@ -120,64 +147,61 @@ class _MarkerLayerState extends State<MarkerLayer> {
     // Marker dimensions are now in meters and constraints are valid
 
     final camera = MapCamera.of(context);
-    Size metersToScreenPixels() {
-      final width = markerPoint.dy -
-          camera
-              .projectAtZoom(_distance.offset(marker.point, marker.width, 0))
-              .dy;
+    Size metersToScreenPixels(int i) {
+      final p = _projectedMeterSizes![i]!;
 
-      if (marker.width == marker.height) return Size(width, width);
-
+      final (wpx, wpy) = camera.crs.transform(p.$1.dx, p.$1.dy, zoomScale);
+      final width = 2 * (pxPoint - Offset(wpx, wpy)).distance;
+      if (m.width == m.height) return Size(width, width);
+      final (hpx, hpy) = camera.crs.transform(p.$2.dx, p.$2.dy, zoomScale);
       return Size(
         width,
-        markerPoint.dy -
-            camera
-                .projectAtZoom(_distance.offset(marker.point, marker.height, 0))
-                .dy,
+        2 * (pxPoint - Offset(hpx, hpy)).distance,
       );
     }
 
     if (!widget.optimizeDimensionsInMeters) {
-      return constraints.constrain(metersToScreenPixels());
+      return constraints.constrain(metersToScreenPixels(i));
     }
     // If optimizing, use the cached ratio if available, or calculate it
     // (using the first marker in the layer, given how this method is called)
-    _pixelsPerMeter ??= metersToScreenPixels().width / marker.width;
+    _pixelsPerMeter ??= metersToScreenPixels(i).width / m.width;
     return constraints.constrainDimensions(
-      _pixelsPerMeter! * marker.width,
-      _pixelsPerMeter! * marker.height,
+      _pixelsPerMeter! * m.width,
+      _pixelsPerMeter! * m.height,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final map = MapCamera.of(context);
-    final crs = map.crs;
 
-    if (_projectedPoints == null || _projectionCrs != crs) {
-      _projectionCrs = crs;
-      _projectedPoints = _projectPoints(crs);
+    if (_projectedPoints == null ||
+        _projectedMeterSizes == null ||
+        _projectionCrs != map.crs) {
+      _projectionCrs = map.crs;
+      _projectedPoints = _projectPoints(map.crs);
+      _projectedMeterSizes = _projectMeterSizes(map.crs);
     }
-    final projectedPoints = _projectedPoints!;
     _pixelsPerMeter = null;
 
     final worldWidth = map.getWorldWidthAtZoom();
-    final zoomScale = crs.scale(map.zoom);
+    final zoomScale = map.crs.scale(map.zoom);
 
     return MobileLayerTransformer(
       child: Stack(
         children: () sync* {
-          for (var i = 0; i < widget.markers.length; i++) {
+          for (int i = 0; i < widget.markers.length; i++) {
             final m = widget.markers[i];
 
             // Scale the cached projection to the current zoom
-            final projected = projectedPoints[i];
+            final projected = _projectedPoints![i];
             final (px, py) =
-                crs.transform(projected.dx, projected.dy, zoomScale);
+                map.crs.transform(projected.dx, projected.dy, zoomScale);
             final pxPoint = Offset(px, py);
 
             // Resolve real size and alignment
-            final size = _getSizeInPixels(m, pxPoint);
+            final size = _getSizeInPixels(m, i, pxPoint, zoomScale);
             final alignment = m.alignment ?? widget.alignment;
             final left = 0.5 * size.width * (alignment.x + 1);
             final top = 0.5 * size.height * (alignment.y + 1);
