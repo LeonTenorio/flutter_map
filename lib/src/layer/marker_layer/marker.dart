@@ -22,10 +22,12 @@ class Marker {
   /// The [Marker] itself is not a widget.
   final Widget child;
 
-  /// Width of child, in pixels (unless [useDimensionsInMeters] is set).
+  /// Width dimension of child, in pixels (unless [useDimensionsInMeters] is
+  /// set).
   final double width;
 
-  /// Height of child, in pixels (unless [useDimensionsInMeters] is set).
+  /// Height dimension of child, in pixels (unless [useDimensionsInMeters] is
+  /// set).
   final double height;
 
   /// Whether to treat [width] and [height] as meters, with optional pixel size
@@ -34,19 +36,21 @@ class Marker {
   /// If `null` (as default), [width] and [height] are specified in pixels.
   ///
   /// If set to [BoxConstraints], [width] and [height] are specified in meters.
-  /// They will constrain size of the marker on the screen in pixels. The
-  /// constraints must have finite minimum dimensions.
+  /// These [BoxConstraints] are in pixels, and constrain the screen size of the
+  /// child.
   ///
-  /// Set an empty [BoxConstraints] to display the marker as its true
-  /// geographical size (without constraints):
+  /// Set an empty [BoxConstraints] to display the child in meters without
+  /// constraints (true size):
   ///
   /// ```dart
   ///   useDimensionsInMeters: const BoxConstraints(),
   /// ```
   ///
-  /// When using geographical sizing, the child can use [SizedBox.expand] to
-  /// expand itself to the available size. [LayoutBuilder] can be used to obtain
-  /// its calculated screen size, if necessary.
+  /// Any constraints set must have finite minimum dimensions.
+  ///
+  /// When using meters, the child can use [SizedBox.expand] to expand itself to
+  /// the available size. [LayoutBuilder] can be used to obtain the calculated
+  /// screen size, if necessary.
   final BoxConstraints? useDimensionsInMeters;
 
   /// Alignment of the marker relative to the normal center at [point].
