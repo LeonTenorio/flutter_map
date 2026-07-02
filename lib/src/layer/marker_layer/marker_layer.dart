@@ -108,47 +108,49 @@ class _MarkerLayerState extends State<MarkerLayer> {
     );
   }
 
-  (double, double) _getDimensionsInPixels(Marker marker) {
+  /// Calculate marker dimensions
+  Size _getSizeInPixels(Marker marker, Offset markerPoint) {
     final constraints = marker.useDimensionsInMeters;
-    if (constraints == null) return (marker.width, marker.height);
-
-    final camera = MapCamera.of(context);
-
-    (double, double) metersToScreenPixels() {
-      final baseOffset = camera.getOffsetFromOrigin(marker.point);
-      return (
-        (baseOffset -
-                    camera.getOffsetFromOrigin(
-                        _distance.offset(marker.point, marker.width / 2, 180)))
-                .distance *
-            2,
-        (baseOffset -
-                    camera.getOffsetFromOrigin(
-                        _distance.offset(marker.point, marker.height / 2, 180)))
-                .distance *
-            2
+    if (constraints == null) return Size(marker.width, marker.height);
+    if (!constraints.minWidth.isFinite || !constraints.minHeight.isFinite) {
+      throw RangeError(
+        '`Marker.useDimensionsInMeters` must have finite minimums',
       );
     }
 
-    double width;
-    double height;
-    if (!widget.optimizeDimensionsInMeters) {
-      // If not optimizing, then we need to calculate this for every marker...
-      (width, height) = metersToScreenPixels();
-    } else {
-      // ...otherwise we use the cached ratio if available, or calculate it
-      // (using the first marker in the layer, given how this method is called)
-      _pixelsPerMeter ??= metersToScreenPixels().$1 / marker.width;
-      width = _pixelsPerMeter! * marker.width;
-      height = _pixelsPerMeter! * marker.height;
+    // Marker dimensions are now in meters and constraints are valid
+
+    final camera = MapCamera.of(context);
+    Size metersToScreenPixels() {
+      final baseOffset = markerPoint - camera.pixelOrigin;
+
+      final width = 2 *
+          (baseOffset -
+                  camera.getOffsetFromOrigin(
+                      _distance.offset(marker.point, marker.width / 2, 180)))
+              .distance;
+
+      if (marker.width == marker.height) return Size(width, width);
+
+      return Size(
+        width,
+        2 *
+            (baseOffset -
+                    camera.getOffsetFromOrigin(
+                        _distance.offset(marker.point, marker.height / 2, 180)))
+                .distance,
+      );
     }
 
-    if (!constraints.minWidth.isFinite || !constraints.minHeight.isFinite) {
-      throw RangeError('`Marker.useSizeInMeters` must have finite minimums');
+    if (!widget.optimizeDimensionsInMeters) {
+      return constraints.constrain(metersToScreenPixels());
     }
-    return (
-      constraints.constrainWidth(width),
-      constraints.constrainHeight(height)
+    // If optimizing, use the cached ratio if available, or calculate it
+    // (using the first marker in the layer, given how this method is called)
+    _pixelsPerMeter ??= metersToScreenPixels().width / marker.width;
+    return constraints.constrainDimensions(
+      _pixelsPerMeter! * marker.width,
+      _pixelsPerMeter! * marker.height,
     );
   }
 
@@ -178,18 +180,14 @@ class _MarkerLayerState extends State<MarkerLayer> {
                 crs.transform(projected.dx, projected.dy, zoomScale);
             final pxPoint = Offset(px, py);
 
-            // Get marker dimensions
-            final double width;
-            final double height;
-            (width, height) = _getDimensionsInPixels(m);
-
-            // Resolve real alignment
-            final left =
-                0.5 * width * ((m.alignment ?? widget.alignment).x + 1);
-            final top =
-                0.5 * height * ((m.alignment ?? widget.alignment).y + 1);
-            final right = width - left;
-            final bottom = height - top;
+            // Resolve real size and alignment
+            final size = _getSizeInPixels(m, pxPoint);
+            final resolvedAlignmentOffset =
+                (m.alignment ?? widget.alignment).alongSize(size);
+            final left = resolvedAlignmentOffset.dx;
+            final top = resolvedAlignmentOffset.dy;
+            final right = size.width - left;
+            final bottom = size.height - top;
 
             Positioned? getPositioned(double worldShift) {
               final shiftedX = pxPoint.dx + worldShift;
@@ -211,8 +209,8 @@ class _MarkerLayerState extends State<MarkerLayer> {
 
               return Positioned(
                 key: m.key,
-                width: width,
-                height: height,
+                width: size.width,
+                height: size.height,
                 left: shiftedLocalPoint.dx - right,
                 top: shiftedLocalPoint.dy - bottom,
                 child: (m.rotate ?? widget.rotate)
