@@ -166,7 +166,7 @@ class _MarkerPageState extends State<MarkerPage> {
                         -0.12835,
                       ),
                       height: 1000,
-                      width: 1000,
+                      width: 500,
                       useDimensionsInMeters: const BoxConstraints(
                         minHeight: 30,
                         minWidth: 30,

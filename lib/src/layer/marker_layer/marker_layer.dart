@@ -108,7 +108,6 @@ class _MarkerLayerState extends State<MarkerLayer> {
     );
   }
 
-  /// Calculate marker dimensions
   Size _getSizeInPixels(Marker marker, Offset markerPoint) {
     final constraints = marker.useDimensionsInMeters;
     if (constraints == null) return Size(marker.width, marker.height);
@@ -122,23 +121,19 @@ class _MarkerLayerState extends State<MarkerLayer> {
 
     final camera = MapCamera.of(context);
     Size metersToScreenPixels() {
-      final baseOffset = markerPoint - camera.pixelOrigin;
-
-      final width = 2 *
-          (baseOffset -
-                  camera.getOffsetFromOrigin(
-                      _distance.offset(marker.point, marker.width / 2, 180)))
-              .distance;
+      final width = markerPoint.dy -
+          camera
+              .projectAtZoom(_distance.offset(marker.point, marker.width, 0))
+              .dy;
 
       if (marker.width == marker.height) return Size(width, width);
 
       return Size(
         width,
-        2 *
-            (baseOffset -
-                    camera.getOffsetFromOrigin(
-                        _distance.offset(marker.point, marker.height / 2, 180)))
-                .distance,
+        markerPoint.dy -
+            camera
+                .projectAtZoom(_distance.offset(marker.point, marker.height, 0))
+                .dy,
       );
     }
 
@@ -182,10 +177,9 @@ class _MarkerLayerState extends State<MarkerLayer> {
 
             // Resolve real size and alignment
             final size = _getSizeInPixels(m, pxPoint);
-            final resolvedAlignmentOffset =
-                (m.alignment ?? widget.alignment).alongSize(size);
-            final left = resolvedAlignmentOffset.dx;
-            final top = resolvedAlignmentOffset.dy;
+            final alignment = m.alignment ?? widget.alignment;
+            final left = 0.5 * size.width * (alignment.x + 1);
+            final top = 0.5 * size.height * (alignment.y + 1);
             final right = size.width - left;
             final bottom = size.height - top;
 
@@ -216,7 +210,7 @@ class _MarkerLayerState extends State<MarkerLayer> {
                 child: (m.rotate ?? widget.rotate)
                     ? Transform.rotate(
                         angle: -map.rotationRad,
-                        alignment: (m.alignment ?? widget.alignment) * -1,
+                        alignment: Alignment(-alignment.x, -alignment.y),
                         child: m.child,
                       )
                     : m.child,
