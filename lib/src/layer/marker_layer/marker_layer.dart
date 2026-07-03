@@ -135,54 +135,38 @@ class _MarkerLayerState extends State<MarkerLayer> {
     );
   }
 
-  Size _getSizeInPixels(Marker m, int i, Offset pxPoint, double zoomScale) {
-    final constraints = m.useDimensionsInMeters!;
-    if (!constraints.minWidth.isFinite || !constraints.minHeight.isFinite) {
-      throw RangeError(
-        '`Marker.useDimensionsInMeters` must have finite minimums',
-      );
-    }
-
-    // Marker dimensions are now in meters and constraints are valid
-
-    final camera = MapCamera.of(context);
-    Size metersToScreenPixels(int i) {
-      final p = _projectedMeterSizes![i]!;
-
-      final (wpx, wpy) = camera.crs.transform(p.$1.dx, p.$1.dy, zoomScale);
-      final width = 2 * (pxPoint - Offset(wpx, wpy)).distance;
-      if (m.width == m.height) return Size(width, width);
-      final (hpx, hpy) = camera.crs.transform(p.$2.dx, p.$2.dy, zoomScale);
-      return Size(width, 2 * (pxPoint - Offset(hpx, hpy)).distance);
-    }
-
-    if (!widget.optimizeDimensionsInMeters) {
-      return constraints.constrain(metersToScreenPixels(i));
-    }
-    // If optimizing, use the cached ratio if available, or calculate it
-    // (using the first marker in the layer, given how this method is called)
-    _pixelsPerMeter ??= metersToScreenPixels(i).width / m.width;
-    return constraints.constrainDimensions(
-      _pixelsPerMeter! * m.width,
-      _pixelsPerMeter! * m.height,
-    );
+  /// Use generated [_projectedMeterSizes] to convert a marker's size in meters
+  /// to its screen size
+  Size _metersToScreenPixels(
+    MapCamera camera,
+    Marker m,
+    Offset pxPoint,
+    int i,
+    double zoomScale,
+  ) {
+    final p = _projectedMeterSizes![i]!;
+    final (wpx, wpy) = camera.crs.transform(p.$1.dx, p.$1.dy, zoomScale);
+    final width = 2 * (pxPoint - Offset(wpx, wpy)).distance;
+    if (m.width == m.height) return Size.square(width);
+    final (hpx, hpy) = camera.crs.transform(p.$2.dx, p.$2.dy, zoomScale);
+    return Size(width, 2 * (pxPoint - Offset(hpx, hpy)).distance);
   }
 
   @override
   Widget build(BuildContext context) {
-    final map = MapCamera.of(context);
+    final camera = MapCamera.of(context);
 
     if (_projectedPoints == null ||
         _projectedMeterSizes == null ||
-        _projectionCrs != map.crs) {
-      _projectionCrs = map.crs;
-      _projectedPoints = _projectPoints(map.crs);
-      _projectedMeterSizes = _projectMeterSizes(map.crs);
+        _projectionCrs != camera.crs) {
+      _projectionCrs = camera.crs;
+      _projectedPoints = _projectPoints(camera.crs);
+      _projectedMeterSizes = _projectMeterSizes(camera.crs);
     }
     _pixelsPerMeter = null;
 
-    final worldWidth = map.getWorldWidthAtZoom();
-    final zoomScale = map.crs.scale(map.zoom);
+    final worldWidth = camera.getWorldWidthAtZoom();
+    final zoomScale = camera.crs.scale(camera.zoom);
 
     return MobileLayerTransformer(
       child: Stack(
@@ -193,18 +177,38 @@ class _MarkerLayerState extends State<MarkerLayer> {
             // Scale the cached projection to the current zoom
             final projected = _projectedPoints![i];
             final (px, py) =
-                map.crs.transform(projected.dx, projected.dy, zoomScale);
+                camera.crs.transform(projected.dx, projected.dy, zoomScale);
             final pxPoint = Offset(px, py);
 
             // Resolve real size and alignment
             final double width;
             final double height;
-            if (m.useDimensionsInMeters == null) {
+            if (m.useDimensionsInMeters case final constraints?) {
+              if (!constraints.minWidth.isFinite ||
+                  !constraints.minHeight.isFinite) {
+                throw RangeError(
+                  '`Marker.useDimensionsInMeters` must have finite minimums',
+                );
+              }
+              if (!widget.optimizeDimensionsInMeters) {
+                final size =
+                    _metersToScreenPixels(camera, m, pxPoint, i, zoomScale);
+                width = constraints.constrainWidth(size.width);
+                height = constraints.constrainHeight(size.height);
+              } else {
+                // If optimizing, use the cached ratio if available, or
+                // calculate it (using the first marker in the layer)
+                _pixelsPerMeter ??=
+                    _metersToScreenPixels(camera, m, pxPoint, i, zoomScale)
+                            .width /
+                        m.width;
+                width = constraints.constrainWidth(_pixelsPerMeter! * m.width);
+                height =
+                    constraints.constrainHeight(_pixelsPerMeter! * m.height);
+              }
+            } else {
               width = m.width;
               height = m.height;
-            } else {
-              Size(:width, :height) =
-                  _getSizeInPixels(m, i, pxPoint, zoomScale);
             }
             final alignment = m.alignment ?? widget.alignment;
             final left = 0.5 * width * (alignment.x + 1);
@@ -216,7 +220,7 @@ class _MarkerLayerState extends State<MarkerLayer> {
               final shiftedX = pxPoint.dx + worldShift;
 
               // Cull if out of bounds
-              if (!map.pixelBounds.overlaps(
+              if (!camera.pixelBounds.overlaps(
                 Rect.fromPoints(
                   Offset(shiftedX + left, pxPoint.dy - bottom),
                   Offset(shiftedX - right, pxPoint.dy + top),
@@ -228,7 +232,7 @@ class _MarkerLayerState extends State<MarkerLayer> {
               // Shift original coordinate along worlds, then move into relative
               // to origin space
               final shiftedLocalPoint =
-                  Offset(shiftedX, pxPoint.dy) - map.pixelOrigin;
+                  Offset(shiftedX, pxPoint.dy) - camera.pixelOrigin;
 
               return Positioned(
                 key: m.key,
@@ -238,7 +242,7 @@ class _MarkerLayerState extends State<MarkerLayer> {
                 top: shiftedLocalPoint.dy - bottom,
                 child: (m.rotate ?? widget.rotate)
                     ? Transform.rotate(
-                        angle: -map.rotationRad,
+                        angle: -camera.rotationRad,
                         alignment: Alignment(-alignment.x, -alignment.y),
                         child: m.child,
                       )
