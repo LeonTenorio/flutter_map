@@ -120,15 +120,11 @@ class _MarkerLayerState extends State<MarkerLayer> {
 
           final w =
               projection.project(_distance.offset(m.point, m.width / 2, 180));
-          if (m.width == m.height) yield MapEntry(i, (w, w));
-          yield MapEntry(
-            i,
-            (
-              w,
-              projection.project(_distance.offset(m.point, m.height / 2, 180)),
-            ),
-          );
+          late final h =
+              projection.project(_distance.offset(m.point, m.height / 2, 180));
+          yield MapEntry(i, (w, m.width == m.height ? w : h));
 
+          // If we're optimizing, we'll never use any more values we generate
           if (widget.optimizeDimensionsInMeters) break;
         }
       }(),
