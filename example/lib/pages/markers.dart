@@ -231,8 +231,10 @@ class _MarkerPageState extends State<MarkerPage> {
                       useDimensionsInMeters: constrainMeterMarkers
                           ? const BoxConstraints(maxHeight: 200, maxWidth: 200)
                           : const BoxConstraints(),
-                      child:
-                          const _MeterMarkerChild(label: '500x300km\n(200px²)'),
+                      child: _MeterMarkerChild(
+                        label: '500x300km\n('
+                            '${constrainMeterMarkers ? '0-200px²' : 'constraints off'})',
+                      ),
                     ),
                     Marker(
                       point: const LatLng(
