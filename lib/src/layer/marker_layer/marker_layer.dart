@@ -233,7 +233,7 @@ class _MarkerLayerState extends State<MarkerLayer> {
                   Offset(shiftedX, pxPoint.dy) - camera.pixelOrigin;
 
               return Positioned(
-                key: m.key,
+                key: m.key != null ? ValueKey((m.key, worldShift)) : null,
                 width: width,
                 height: height,
                 left: shiftedLocalPoint.dx - right,
